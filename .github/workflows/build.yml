@@ -1,0 +1,40 @@
+name: Build Plugin
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup C++
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: gcc
+          vcpkg: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-apk
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
