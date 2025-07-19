@@ -18,10 +18,15 @@ import android.widget.Toast
 import com.rk.xededitor.settings.Settings
 import com.rk.xededitor.ui.components.SimpleEditText
 import com.rk.xededitor.ui.components.rememberMutableState
+import org.json.JSONObject
 
 class Main : ExtensionAPI() {
     override fun onPluginLoaded() {
-        // Add a button to the editor's toolbar
+        addAiButton()
+        addChatButton()
+    }
+
+    private fun addAiButton() {
         val button = ControlItem(
             name = "AI",
             icon = Icons.Default.Build,
@@ -32,18 +37,48 @@ class Main : ExtensionAPI() {
                     return@ControlItem
                 }
 
-                // a toast message
-                Toast.makeText(MainActivity.context, "AI functionality triggered", Toast.LENGTH_SHORT).show()
-
                 val editor = Editor.getEditor()
                 val selectedText = editor.selectedText
                 if (selectedText.isNotEmpty()) {
-                    val reversedText = selectedText.reversed()
-                    editor.replaceSelection(reversedText)
+                    val model = Settings.get("ai_model", "gpt-3.5-turbo")
+                    AIAssistant.getCompletion(selectedText, apiKey, model) { response ->
+                        val message = try {
+                            val jsonObject = JSONObject(response)
+                            jsonObject.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content")
+                        } catch (e: Exception) {
+                            "Error parsing response"
+                        }
+
+                        MainActivity.context.runOnUiThread {
+                            editor.replaceSelection(message)
+                        }
+                    }
                 }
             }
         )
         Hooks.add_control_item(button)
+    }
+
+    private fun addChatButton() {
+        val button = ControlItem(
+            name = "Chat",
+            icon = Icons.Default.Build,
+            onClick = {
+                openChatView()
+            }
+        )
+        Hooks.add_control_item(button)
+    }
+
+    private fun openChatView() {
+        // This is a guess, as I don't have the SDK documentation
+        try {
+            Hooks.add_composable("Chat", Icons.Default.Build) {
+                ChatView()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(MainActivity.context, "Error opening chat view", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onAppCreated() {
@@ -85,6 +120,17 @@ class Main : ExtensionAPI() {
                 onValueChange = { Settings.put("api_key", it) },
                 label = "API Key",
                 placeholder = "Enter your API key here"
+            )
+
+            val model by rememberMutableState(
+                key = "ai_model",
+                default = "gpt-3.5-turbo"
+            )
+            SimpleEditText(
+                value = model,
+                onValueChange = { Settings.put("ai_model", it) },
+                label = "AI Model",
+                placeholder = "Enter the AI model name"
             )
         }
     }
