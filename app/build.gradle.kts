@@ -86,4 +86,6 @@ dependencies {
     compileOnly(libs.quickjs.android)
     compileOnly(libs.anrwatchdog)
     compileOnly(libs.word.wrap)
+
+    testImplementation("org.mockito:mockito-core:5.12.0")
 }
