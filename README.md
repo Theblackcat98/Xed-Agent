@@ -1,43 +1,47 @@
-# Plugin Template for Xed-Editor
+# AI Plugin for Xed Editor
 
-This project serves as a template for creating plugins for **Xed-Editor (Karbon)**.
+This plugin provides AI-powered features for the Xed text editor, including:
 
-## Setup
+*   **Intelligent Code Completion:** Get context-aware code completions that go beyond simple token matching.
+*   **Code Generation:** Generate code from natural language descriptions.
+*   **Code Refactoring:** Get intelligent refactoring suggestions to improve your code.
+*   **Inline Chat and Q&A:** Ask coding-related questions and get answers from the AI without leaving the editor.
 
-Follow these steps to set up the repository and build your plugin:
+## Installation
 
-### 1. Clone the Repository
+1.  Download the latest release from the [releases page](https://github.com/Xed-Editor/pluginTemplate/releases).
+2.  Open the Xed editor and go to `Settings > Plugins`.
+3.  Click the "Install" button and select the downloaded `.apk` file.
 
-Start by cloning this repository and navigating into its directory:
+## Usage
 
-```bash
-git clone https://github.com/Xed-Editor/pluginTemplate
-cd pluginTemplate
-mkdir -p sdk
-```
+Once the plugin is installed, you will see four new buttons in the editor's control panel:
 
-### 2. Download the SDK
+*   **AI:** Select a piece of code and click this button to get a completion from the AI.
+*   **Generate Code:** Click this button to open a dialog where you can enter a natural language prompt to generate code.
+*   **Refactor:** Select a piece of code and click this button to get refactoring suggestions from the AI.
+*   **Chat:** Click this button to open a chat view where you can ask coding-related questions.
 
-1. Download the latest **`sdk.jar`** from the [GitHub actions](https://github.com/Xed-Editor/Xed-Editor-Sdk/actions).  
+## Configuration
 
-   **Note**: If certain APIs or Classes are not available in your plugin then just update the SDK jar. 
+To use the AI-powered features, you need to configure your API key and the AI model.
 
-2. Unzip it and Place the downloaded ** `sdk.jar`** file into the `app/libs` directory of the project
+1.  Go to `Settings > AI Plugin Settings`.
+2.  Enter your API key in the "API Key" field.
+3.  Enter the name of the AI model you want to use in the "AI Model" field. The default model is `gpt-3.5-turbo`.
 
-### 3. Build the Plugin
+## Building from Source
 
-Run the following command to build your plugin:
-
-```bash
-bash gradlew assembleRelease
-```
-
-### 4. Locate the Build Output
-
-After a successful build, your plugin will be available at:
+To build the plugin from source, you will need to have the Android SDK installed. You will also need to create a `local.properties` file in the `app` directory with the following content:
 
 ```
-app/build/outputs/apk/release/app-release-unsigned.apk
+sdk.dir=/path/to/your/android/sdk
 ```
 
-there should be a file with .apk extension this is your final file. you can install this from the app
+Then, you can build the plugin by running the following command:
+
+```
+./gradlew assembleRelease
+```
+
+The unsigned APK will be located in the `app/build/outputs/apk/release` directory.

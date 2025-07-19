@@ -24,6 +24,8 @@ class Main : ExtensionAPI() {
     override fun onPluginLoaded() {
         addAiButton()
         addChatButton()
+        addGenerateCodeButton()
+        addRefactorButton()
     }
 
     private fun addAiButton() {
@@ -59,6 +61,81 @@ class Main : ExtensionAPI() {
         Hooks.add_control_item(button)
     }
 
+    private fun addRefactorButton() {
+        val button = ControlItem(
+            name = "Refactor",
+            icon = Icons.Default.Build,
+            onClick = {
+                val editor = Editor.getEditor()
+                val selectedText = editor.selectedText
+                if (selectedText.isNotEmpty()) {
+                    val apiKey = Settings.get("api_key", "")
+                    if (apiKey.isEmpty()) {
+                        Toast.makeText(MainActivity.context, "Please set your API key in the settings", Toast.LENGTH_SHORT).show()
+                        return@ControlItem
+                    }
+
+                    val model = Settings.get("ai_model", "gpt-3.5-turbo")
+                    val prompt = "Refactor the following code:\n$selectedText"
+                    AIAssistant.getCompletion(prompt, apiKey, model) { response ->
+                        val message = try {
+                            val jsonObject = JSONObject(response)
+                            jsonObject.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content")
+                        } catch (e: Exception) {
+                            "Error parsing response"
+                        }
+
+                        MainActivity.context.runOnUiThread {
+                            editor.replaceSelection(message)
+                        }
+                    }
+                }
+            }
+        )
+        Hooks.add_control_item(button)
+    }
+
+    private fun addGenerateCodeButton() {
+        var showDialog by rememberMutableState(key = "show_generate_code_dialog", default = false)
+
+        val button = ControlItem(
+            name = "Generate Code",
+            icon = Icons.Default.Build,
+            onClick = {
+                showDialog = true
+            }
+        )
+        Hooks.add_control_item(button)
+
+        if (showDialog) {
+            GenerateCodeDialog(
+                onGenerate = { prompt ->
+                    val apiKey = Settings.get("api_key", "")
+                    if (apiKey.isEmpty()) {
+                        Toast.makeText(MainActivity.context, "Please set your API key in the settings", Toast.LENGTH_SHORT).show()
+                        return@GenerateCodeDialog
+                    }
+
+                    val model = Settings.get("ai_model", "gpt-3.5-turbo")
+                    AIAssistant.getCompletion(prompt, apiKey, model) { response ->
+                        val message = try {
+                            val jsonObject = JSONObject(response)
+                            jsonObject.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content")
+                        } catch (e: Exception) {
+                            "Error parsing response"
+                        }
+
+                        MainActivity.context.runOnUiThread {
+                            Editor.getEditor().insertText(message, Editor.getEditor().cursorPosition)
+                        }
+                    }
+                    showDialog = false
+                },
+                onDismiss = { showDialog = false }
+            )
+        }
+    }
+
     private fun addChatButton() {
         val button = ControlItem(
             name = "Chat",
@@ -71,13 +148,8 @@ class Main : ExtensionAPI() {
     }
 
     private fun openChatView() {
-        // This is a guess, as I don't have the SDK documentation
-        try {
-            Hooks.add_composable("Chat", Icons.Default.Build) {
-                ChatView()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(MainActivity.context, "Error opening chat view", Toast.LENGTH_SHORT).show()
+        Hooks.add_composable("Chat", Icons.Default.Build) {
+            ChatView()
         }
     }
 
